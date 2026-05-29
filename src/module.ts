@@ -180,6 +180,26 @@ export const plugin = new PanelPlugin<CalendarHeatmapOptions>(CalendarHeatmapPan
         })
 
         // Data settings
+        .addTextInput({
+          path: 'categoryField',
+          name: t('panel.options.categoryField.name', 'Category Field'),
+          description: t(
+            'panel.options.categoryField.description',
+            'String column whose distinct values each get a unique color (e.g. absence_type_description). Overrides the color scheme.'
+          ),
+          defaultValue: '',
+          category: ['Data'],
+        })
+        .addTextInput({
+          path: 'labelField',
+          name: t('panel.options.labelField.name', 'Label Field'),
+          description: t(
+            'panel.options.labelField.description',
+            'Column name to use as tooltip label instead of the numeric value (e.g. absence_type_description)'
+          ),
+          defaultValue: '',
+          category: ['Data'],
+        })
         .addSelect({
           path: 'aggregation',
           name: t('panel.options.aggregation.name', 'Aggregation'),

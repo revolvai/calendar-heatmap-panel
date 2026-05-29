@@ -3,5 +3,6 @@ apiVersion: 1
 providers:
   - name: 'calendar-heatmap-panel'
     type: file
+    allowUiUpdates: true
     options:
       path: /etc/grafana/provisioning/dashboards
