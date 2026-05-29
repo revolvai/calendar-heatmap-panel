@@ -12,13 +12,19 @@ interface TimestampedValue {
 export function processTimeSeriesData(
   series: DataFrame[],
   aggregation: Aggregation,
-  timeZone?: string
+  timeZone?: string,
+  labelField?: string,
+  categoryField?: string
 ): HeatmapValue[] {
   const dailyData = new Map<string, TimestampedValue[]>();
+  const dailyLabels = new Map<string, Set<string>>();
+  const dailyCategory = new Map<string, string>();
 
   for (const frame of series) {
     const timeField = frame.fields.find((f) => f.type === FieldType.time);
     const valueField = frame.fields.find((f) => f.type === FieldType.number && f.name !== 'Time');
+    const labelFieldData = labelField ? frame.fields.find((f) => f.name === labelField) : undefined;
+    const categoryFieldData = categoryField ? frame.fields.find((f) => f.name === categoryField) : undefined;
 
     if (!timeField || !valueField) {
       continue;
@@ -39,13 +45,33 @@ export function processTimeSeriesData(
         dailyData.set(date, []);
       }
       dailyData.get(date)!.push({ timestamp, value });
+
+      if (labelFieldData) {
+        const labelValue = labelFieldData.values[i];
+        if (labelValue !== null && labelValue !== undefined && String(labelValue).trim() !== '') {
+          if (!dailyLabels.has(date)) {
+            dailyLabels.set(date, new Set());
+          }
+          dailyLabels.get(date)!.add(String(labelValue));
+        }
+      }
+
+      if (categoryFieldData && !dailyCategory.has(date)) {
+        const catValue = categoryFieldData.values[i];
+        if (catValue !== null && catValue !== undefined && String(catValue).trim() !== '') {
+          dailyCategory.set(date, String(catValue));
+        }
+      }
     }
   }
 
   const result: HeatmapValue[] = [];
   dailyData.forEach((values, date) => {
     const count = aggregate(values, aggregation);
-    result.push({ date, originalDate: date, count: Math.round(count * 100) / 100 });
+    const labelSet = dailyLabels.get(date);
+    const label = labelSet && labelSet.size > 0 ? Array.from(labelSet).join(', ') : undefined;
+    const category = dailyCategory.get(date);
+    result.push({ date, originalDate: date, count: Math.round(count * 100) / 100, label, category });
   });
 
   result.sort((a, b) => a.date.localeCompare(b.date));
