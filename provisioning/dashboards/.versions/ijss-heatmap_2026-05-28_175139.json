@@ -655,8 +655,8 @@
       "spec": {
         "allowCustomValue": true,
         "current": {
-          "text": "00123088",
-          "value": "00123088"
+          "text": "00000000",
+          "value": "00000000"
         },
         "definition": "SELECT individual_registration_number FROM std.std_employees LIMIT 50",
         "hide": "dontHide",
