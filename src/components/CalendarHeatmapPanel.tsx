@@ -55,8 +55,14 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
   const theme = useTheme2();
 
   const heatmapData = useMemo(() => {
-    return processTimeSeriesData(data.series, options.aggregation, timeZone);
-  }, [data.series, options.aggregation, timeZone]);
+    return processTimeSeriesData(
+      data.series,
+      options.aggregation,
+      timeZone,
+      options.labelField || undefined,
+      options.categoryField || undefined
+    );
+  }, [data.series, options.aggregation, timeZone, options.labelField, options.categoryField]);
 
   const countByOriginalDate = useMemo(() => {
     const m = new Map<string, number>();
@@ -65,6 +71,36 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
     }
     return m;
   }, [heatmapData]);
+
+  const labelByOriginalDate = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const d of heatmapData) {
+      if (d.label !== undefined) {
+        m.set(d.originalDate, d.label);
+      }
+    }
+    return m;
+  }, [heatmapData]);
+
+  const categoryByOriginalDate = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const d of heatmapData) {
+      if (d.category !== undefined) {
+        m.set(d.originalDate, d.category);
+      }
+    }
+    return m;
+  }, [heatmapData]);
+
+  // Stable palette for categorical coloring — assigned alphabetically so colors don't shift as data changes
+  const CATEGORY_PALETTE = ['#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f', '#edc948', '#b07aa1', '#ff9da7', '#9c755f', '#bab0ac'];
+
+  const categoryColorMap = useMemo(() => {
+    const categories = Array.from(new Set(heatmapData.map((d) => d.category).filter(Boolean) as string[])).sort();
+    const m = new Map<string, string>();
+    categories.forEach((cat, i) => m.set(cat, CATEGORY_PALETTE[i % CATEGORY_PALETTE.length]));
+    return m;
+  }, [heatmapData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const rawStartDate = useMemo(() => new Date(timeRange.from.valueOf()), [timeRange.from]);
   const rawEndDate = useMemo(() => new Date(timeRange.to.valueOf()), [timeRange.to]);
@@ -255,18 +291,24 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
           const typedCell = cell as unknown as HeatmapValue;
           const date = typedCell.originalDate ?? formatDate(reverseShift(options.weekStart, typedCell.date), timeZone);
           const originalCount = countByOriginalDate.get(typedCell.originalDate);
+          const category = categoryByOriginalDate.get(typedCell.originalDate);
+          const originalLabel = labelByOriginalDate.get(typedCell.originalDate);
+          const displayValue = originalLabel ?? category ?? originalCount?.toLocaleString();
           const tooltipContent =
-            originalCount !== undefined
-              ? `${date}: ${originalCount.toLocaleString()}`
+            displayValue !== undefined
+              ? `${date}: ${displayValue}`
               : `${date}: ${t('panel.component.tooltip.noData', 'No data')}`;
 
+          const categoryColor = category ? categoryColorMap.get(category) : undefined;
+          const rectProps = categoryColor ? { ...props, fill: categoryColor } : props;
+
           if (!options.showTooltip) {
-            return <rect {...props} rx={options.radius} />;
+            return <rect {...rectProps} rx={options.radius} />;
           }
 
           return (
             <Tooltip content={tooltipContent} placement="top">
-              <rect {...props} rx={options.radius} />
+              <rect {...rectProps} rx={options.radius} />
             </Tooltip>
           );
         }}
@@ -274,24 +316,35 @@ export const CalendarHeatmapPanel: React.FC<Props> = ({ data, width, height, opt
 
       {options.showLegend && (
         <div className={styles.legend}>
-          <span>{t('panel.component.legend.less', 'Less')}</span>
-          {Object.entries(colors)
-            .map(([key, color]) => [Number(key), color] as const)
-            .filter(([key]) => !Number.isNaN(key) && key !== 1)
-            .sort(([a], [b]) => a - b)
-            .map(([key, color]) => (
-              <div
-                key={key}
-                className={styles.legendRect}
-                style={{ backgroundColor: color }}
-                title={t('panel.component.legend.tooltip', 'Level {{level}}', { level: key })}
-              />
-            ))}
-          <span>{t('panel.component.legend.more', 'More')}</span>
-          {maxValue > 0 && (
-            <span style={{ marginLeft: 8 }}>
-              ({t('panel.component.legend.max', 'Max')}: {maxValue.toLocaleString()})
-            </span>
+          {categoryColorMap.size > 0 ? (
+            Array.from(categoryColorMap.entries()).map(([cat, color]) => (
+              <React.Fragment key={cat}>
+                <div className={styles.legendRect} style={{ backgroundColor: color }} />
+                <span style={{ marginRight: 8 }}>{cat}</span>
+              </React.Fragment>
+            ))
+          ) : (
+            <>
+              <span>{t('panel.component.legend.less', 'Less')}</span>
+              {Object.entries(colors)
+                .map(([key, color]) => [Number(key), color] as const)
+                .filter(([key]) => !Number.isNaN(key) && key !== 1)
+                .sort(([a], [b]) => a - b)
+                .map(([key, color]) => (
+                  <div
+                    key={key}
+                    className={styles.legendRect}
+                    style={{ backgroundColor: color }}
+                    title={t('panel.component.legend.tooltip', 'Level {{level}}', { level: key })}
+                  />
+                ))}
+              <span>{t('panel.component.legend.more', 'More')}</span>
+              {maxValue > 0 && (
+                <span style={{ marginLeft: 8 }}>
+                  ({t('panel.component.legend.max', 'Max')}: {maxValue.toLocaleString()})
+                </span>
+              )}
+            </>
           )}
         </div>
       )}

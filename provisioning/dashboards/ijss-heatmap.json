@@ -1,0 +1,804 @@
+{
+  "annotations": [
+    {
+      "kind": "AnnotationQuery",
+      "spec": {
+        "builtIn": true,
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "query": {
+          "datasource": {
+            "name": "-- Grafana --"
+          },
+          "group": "grafana",
+          "kind": "DataQuery",
+          "spec": {},
+          "version": "v0"
+        }
+      }
+    }
+  ],
+  "cursorSync": "Off",
+  "editable": true,
+  "elements": {
+    "panel-1": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${datasource_picker}"
+                    },
+                    "group": "grafana-postgresql-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "editorMode": "code",
+                      "format": "table",
+                      "rawQuery": true,
+                      "rawSql": "SELECT\n  d::date AS time,\n  1 AS value,\n  absence_type_description\nFROM std.std_absences a\nCROSS JOIN LATERAL generate_series(\n  a.absence_start,\n  COALESCE(a.absence_end, a.absence_start),\n  interval '1 day'\n) d\nWHERE a.individual_registration_number = '${matricule}'\n  AND a.absence_start IS NOT NULL\n\nUNION ALL\n\nSELECT\n  a.last_day_worked::date AS time,\n  10 AS value,\n  absence_type_description\nFROM std.std_absences a\nWHERE a.individual_registration_number = '${matricule}'\n  AND a.last_day_worked IS NOT NULL\n\nORDER BY time;",
+                      "sql": {
+                        "columns": [
+                          {
+                            "parameters": [],
+                            "type": "function"
+                          }
+                        ],
+                        "groupBy": [
+                          {
+                            "property": {
+                              "type": "string"
+                            },
+                            "type": "groupBy"
+                          }
+                        ],
+                        "limit": 50
+                      }
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "Jours d'absences",
+        "id": 1,
+        "links": [],
+        "title": "ABSENCES / MATRICULE",
+        "vizConfig": {
+          "group": "tim012432-calendarheatmap-panel",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {},
+              "overrides": []
+            },
+            "options": {
+              "aggregation": "min",
+              "autoRectSize": true,
+              "categoryField": "absence_type_description",
+              "colorScheme": "custom",
+              "customColor": "blue",
+              "emptyColor": "#00000057",
+              "labelField": "",
+              "monthLabelCustom": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
+              "monthLabelMode": "default",
+              "radius": 0,
+              "rectSize": 11,
+              "showLegend": false,
+              "showMonthLabels": true,
+              "showTooltip": true,
+              "showWeekLabels": true,
+              "space": 1,
+              "weekLabelCustom": "Sun,Mon,Tue,Wed,Thu,Fri,Sat",
+              "weekLabelMode": "default",
+              "weekStart": "sunday"
+            }
+          },
+          "version": "1.1.2"
+        }
+      }
+    },
+    "panel-2": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${datasource_picker}"
+                    },
+                    "group": "grafana-postgresql-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "editorMode": "code",
+                      "format": "table",
+                      "rawQuery": true,
+                      "rawSql": "SELECT\n  d::date AS time,\n  1 AS value\nFROM std.vw_employees e\nJOIN std.std_bordereaux b ON b.nir = e.nir\nCROSS JOIN LATERAL generate_series(\n  b.start_date,\n  COALESCE(b.end_date, b.start_date),\n  interval '1 day'\n) d\nWHERE e.individual_registration_number = '${matricule}'\n  AND b.start_date IS NOT NULL\nORDER BY time;"
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "all BPIJ bordereaux by NIR (from employees table)",
+        "id": 2,
+        "links": [],
+        "title": "BPIJ / NIR",
+        "vizConfig": {
+          "group": "tim012432-calendarheatmap-panel",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {},
+              "overrides": []
+            },
+            "options": {
+              "aggregation": "min",
+              "autoRectSize": true,
+              "categoryField": "",
+              "colorScheme": "custom",
+              "customColor": "yellow",
+              "emptyColor": "#00000057",
+              "labelField": "",
+              "monthLabelCustom": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
+              "monthLabelMode": "default",
+              "radius": 1,
+              "rectSize": 11,
+              "showLegend": false,
+              "showMonthLabels": true,
+              "showTooltip": true,
+              "showWeekLabels": true,
+              "space": 2,
+              "weekLabelCustom": "Sun,Mon,Tue,Wed,Thu,Fri,Sat",
+              "weekLabelMode": "default",
+              "weekStart": "sunday"
+            }
+          },
+          "version": "1.1.2"
+        }
+      }
+    },
+    "panel-3": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${datasource_picker}"
+                    },
+                    "group": "grafana-postgresql-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "editorMode": "code",
+                      "format": "table",
+                      "rawQuery": true,
+                      "rawSql": "SELECT\n  time,\n  SUM(value) AS value\nFROM (\n  SELECT\n    d::date AS time,\n    COALESCE(NULLIF(b.amount_net, 0), NULLIF(b.amount_brut, 0), 0)\n      / NULLIF((COALESCE(b.end_date, b.start_date) - b.start_date + 1), 0) AS value\n  FROM std.vw_employees e\n  JOIN std.std_leaves l ON l.declaration_id = e.declaration_id::uuid\n  JOIN std.std_bordereaux b ON b.leave_id = l.id AND b.nir = e.nir\n  CROSS JOIN LATERAL generate_series(\n    b.start_date,\n    COALESCE(b.end_date, b.start_date),\n    interval '1 day'\n  ) d\n  WHERE e.individual_registration_number = '${matricule}'\n    AND b.start_date IS NOT NULL\n) x\nGROUP BY time\nORDER BY time;",
+                      "sql": {
+                        "columns": [
+                          {
+                            "parameters": [],
+                            "type": "function"
+                          }
+                        ],
+                        "groupBy": [
+                          {
+                            "property": {
+                              "type": "string"
+                            },
+                            "type": "groupBy"
+                          }
+                        ],
+                        "limit": 50
+                      }
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "reimbursed bordereaux linked through leave_id",
+        "id": 3,
+        "links": [],
+        "title": "REIMBOURSEMENT / MATRICULE",
+        "vizConfig": {
+          "group": "tim012432-calendarheatmap-panel",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {},
+              "overrides": []
+            },
+            "options": {
+              "aggregation": "min",
+              "autoRectSize": true,
+              "categoryField": "",
+              "colorScheme": "custom",
+              "customColor": "green",
+              "emptyColor": "#00000057",
+              "labelField": "",
+              "monthLabelCustom": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
+              "monthLabelMode": "default",
+              "radius": 1,
+              "rectSize": 11,
+              "showLegend": false,
+              "showMonthLabels": true,
+              "showTooltip": true,
+              "showWeekLabels": true,
+              "space": 2,
+              "weekLabelCustom": "Sun,Mon,Tue,Wed,Thu,Fri,Sat",
+              "weekLabelMode": "default",
+              "weekStart": "sunday"
+            }
+          },
+          "version": "1.1.2"
+        }
+      }
+    },
+    "panel-4": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${datasource_picker}"
+                    },
+                    "group": "grafana-postgresql-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "editorMode": "code",
+                      "format": "table",
+                      "rawQuery": true,
+                      "rawSql": "WITH employee AS (\n  SELECT DISTINCT e.nir, e.individual_registration_number, e.declaration_id::uuid AS declaration_id\n  FROM std.vw_employees e\n  WHERE e.individual_registration_number = '${matricule}'\n),\nabsence_days AS (\n  SELECT DISTINCT d::date AS time\n  FROM employee e\n  JOIN std.std_absences a ON a.individual_registration_number = e.individual_registration_number\n  CROSS JOIN LATERAL generate_series(\n    a.absence_start,\n    COALESCE(a.absence_end, a.absence_start),\n    interval '1 day'\n  ) d\n  WHERE a.absence_start IS NOT NULL\n),\nreimbursed_days AS (\n  SELECT DISTINCT d::date AS time\n  FROM employee e\n  JOIN std.std_leaves l ON l.declaration_id = e.declaration_id\n  JOIN std.std_bordereaux b ON b.leave_id = l.id AND b.nir = e.nir\n  CROSS JOIN LATERAL generate_series(\n    b.start_date,\n    COALESCE(b.end_date, b.start_date),\n    interval '1 day'\n  ) d\n  WHERE b.start_date IS NOT NULL\n)\nSELECT ad.time, 1 AS value\nFROM absence_days ad\nLEFT JOIN reimbursed_days rd ON rd.time = ad.time\nWHERE rd.time IS NULL\nORDER BY ad.time;"
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "absence days that have no reimbursed bordereau",
+        "id": 4,
+        "links": [],
+        "title": "ECARTS / MATRICULE",
+        "vizConfig": {
+          "group": "tim012432-calendarheatmap-panel",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {},
+              "overrides": []
+            },
+            "options": {
+              "aggregation": "min",
+              "autoRectSize": true,
+              "categoryField": "",
+              "colorScheme": "custom",
+              "customColor": "red",
+              "emptyColor": "#00000057",
+              "labelField": "",
+              "monthLabelCustom": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
+              "monthLabelMode": "default",
+              "radius": 1,
+              "rectSize": 11,
+              "showLegend": false,
+              "showMonthLabels": true,
+              "showTooltip": true,
+              "showWeekLabels": true,
+              "space": 2,
+              "weekLabelCustom": "Sun,Mon,Tue,Wed,Thu,Fri,Sat",
+              "weekLabelMode": "default",
+              "weekStart": "sunday"
+            }
+          },
+          "version": "1.1.2"
+        }
+      }
+    },
+    "panel-5": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${datasource_picker}"
+                    },
+                    "group": "grafana-postgresql-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "format": "table",
+                      "rawQuery": true,
+                      "rawSql": "WITH employee AS (\n  SELECT e.*\n  FROM std.vw_employees e\n  WHERE e.individual_registration_number = '${matricule}'\n  LIMIT 1\n)\nSELECT 'Employee Name' AS field, CONCAT(first_name, ' ', last_name) AS value FROM employee\nUNION ALL\nSELECT 'Matricule', individual_registration_number::text FROM employee\nUNION ALL\nSELECT 'Gap', gap::text FROM employee;"
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "",
+        "id": 5,
+        "links": [],
+        "title": "Employee",
+        "vizConfig": {
+          "group": "table",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "custom": {
+                  "align": "auto",
+                  "cellOptions": {
+                    "type": "auto"
+                  },
+                  "filterable": false,
+                  "footer": {
+                    "reducers": []
+                  },
+                  "inspect": false,
+                  "wrapHeaderText": false,
+                  "wrapText": true
+                },
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": [
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "field"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 274
+                    }
+                  ]
+                }
+              ]
+            },
+            "options": {
+              "cellHeight": "sm",
+              "enablePagination": false,
+              "showHeader": false
+            }
+          },
+          "version": "13.0.1+security-01"
+        }
+      }
+    },
+    "panel-6": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${datasource_picker}"
+                    },
+                    "group": "grafana-postgresql-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "format": "table",
+                      "rawQuery": true,
+                      "rawSql": "WITH employee AS (\n  SELECT e.*, os.establishment_name AS organization_name\n  FROM std.vw_employees e\n  LEFT JOIN tnt.organization_sirets os ON os.org_id = e.organization_id\n  WHERE e.individual_registration_number = '${matricule}'\n  LIMIT 1\n)\nSELECT 'Organization' AS field, organization_name::text AS value FROM employee\nUNION ALL\nSELECT 'SIRET', siret::text FROM employee\nUNION ALL\nSELECT 'Establishment', establishment_name::text FROM employee\nUNION ALL\nSELECT 'Region', establishment_region::text FROM employee;"
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "",
+        "id": 6,
+        "links": [],
+        "title": "Organization",
+        "vizConfig": {
+          "group": "table",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "custom": {
+                  "align": "auto",
+                  "cellOptions": {
+                    "type": "auto"
+                  },
+                  "filterable": false,
+                  "footer": {
+                    "reducers": []
+                  },
+                  "inspect": false,
+                  "wrapHeaderText": false,
+                  "wrapText": true
+                },
+                "thresholds": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
+                    }
+                  ]
+                }
+              },
+              "overrides": [
+                {
+                  "matcher": {
+                    "id": "byName",
+                    "options": "field"
+                  },
+                  "properties": [
+                    {
+                      "id": "custom.width",
+                      "value": 274
+                    }
+                  ]
+                }
+              ]
+            },
+            "options": {
+              "cellHeight": "sm",
+              "enablePagination": false,
+              "showHeader": false
+            }
+          },
+          "version": "13.0.1+security-01"
+        }
+      }
+    },
+    "panel-8": {
+      "kind": "Panel",
+      "spec": {
+        "data": {
+          "kind": "QueryGroup",
+          "spec": {
+            "queries": [
+              {
+                "kind": "PanelQuery",
+                "spec": {
+                  "hidden": false,
+                  "query": {
+                    "datasource": {
+                      "name": "${datasource_picker}"
+                    },
+                    "group": "grafana-postgresql-datasource",
+                    "kind": "DataQuery",
+                    "spec": {
+                      "dataset": "neondb",
+                      "editorMode": "code",
+                      "format": "table",
+                      "rawQuery": true,
+                      "rawSql": " SELECT\n    time,\n    MAX(ijss_jour) AS value\n  FROM (\n    SELECT\n      generate_series(\n      p.absence_start, \n      COALESCE(p.absence_end, p.absence_start),\n      interval '1 day'\n    ) time,\n      p.ijss_jour\n    FROM std.std_paiements p\n    WHERE p.individual_registration_number = '${matricule}'\n      AND p.absence_start IS NOT NULL\n  ) x \n  GROUP BY time\n  ORDER BY time;",
+                      "sql": {
+                        "columns": [
+                          {
+                            "parameters": [],
+                            "type": "function"
+                          }
+                        ],
+                        "groupBy": [
+                          {
+                            "property": {
+                              "type": "string"
+                            },
+                            "type": "groupBy"
+                          }
+                        ],
+                        "limit": 50
+                      }
+                    },
+                    "version": "v0"
+                  },
+                  "refId": "A"
+                }
+              }
+            ],
+            "queryOptions": {},
+            "transformations": []
+          }
+        },
+        "description": "",
+        "id": 8,
+        "links": [],
+        "title": "PAIEMENT / MATRICULE",
+        "vizConfig": {
+          "group": "tim012432-calendarheatmap-panel",
+          "kind": "VizConfig",
+          "spec": {
+            "fieldConfig": {
+              "defaults": {},
+              "overrides": []
+            },
+            "options": {
+              "aggregation": "max",
+              "autoRectSize": true,
+              "categoryField": "",
+              "colorScheme": "purple",
+              "customColor": "#22c55e",
+              "labelField": "",
+              "monthLabelCustom": "Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec",
+              "monthLabelMode": "default",
+              "radius": 2,
+              "rectSize": 11,
+              "showLegend": true,
+              "showMonthLabels": true,
+              "showTooltip": true,
+              "showWeekLabels": true,
+              "space": 3,
+              "weekLabelCustom": "Sun,Mon,Tue,Wed,Thu,Fri,Sat",
+              "weekLabelMode": "default",
+              "weekStart": "sunday"
+            }
+          },
+          "version": "1.1.2"
+        }
+      }
+    }
+  },
+  "layout": {
+    "kind": "GridLayout",
+    "spec": {
+      "items": [
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-5"
+            },
+            "height": 6,
+            "width": 12,
+            "x": 0,
+            "y": 0
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-6"
+            },
+            "height": 6,
+            "width": 12,
+            "x": 12,
+            "y": 0
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-1"
+            },
+            "height": 6,
+            "width": 24,
+            "x": 0,
+            "y": 6
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-2"
+            },
+            "height": 6,
+            "width": 24,
+            "x": 0,
+            "y": 12
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-3"
+            },
+            "height": 6,
+            "width": 24,
+            "x": 0,
+            "y": 18
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-4"
+            },
+            "height": 6,
+            "width": 24,
+            "x": 0,
+            "y": 24
+          }
+        },
+        {
+          "kind": "GridLayoutItem",
+          "spec": {
+            "element": {
+              "kind": "ElementReference",
+              "name": "panel-8"
+            },
+            "height": 7,
+            "width": 24,
+            "x": 0,
+            "y": 30
+          }
+        }
+      ]
+    }
+  },
+  "links": [],
+  "liveNow": false,
+  "preload": false,
+  "tags": [],
+  "timeSettings": {
+    "autoRefresh": "",
+    "autoRefreshIntervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "fiscalYearStartMonth": 0,
+    "from": "2026-01-01T00:00:00.000Z",
+    "hideTimepicker": false,
+    "timezone": "browser",
+    "to": "2026-12-31T23:59:59.000Z"
+  },
+  "title": "IJSS Heatmap true",
+  "variables": [
+    {
+      "kind": "DatasourceVariable",
+      "spec": {
+        "allowCustomValue": true,
+        "current": {
+          "text": "manutan-prod",
+          "value": "bfnft2o51bwu8d"
+        },
+        "hide": "dontHide",
+        "includeAll": false,
+        "label": "Database",
+        "multi": false,
+        "name": "datasource_picker",
+        "options": [],
+        "pluginId": "grafana-postgresql-datasource",
+        "refresh": "onDashboardLoad",
+        "regex": "",
+        "skipUrlSync": false
+      }
+    },
+    {
+      "kind": "QueryVariable",
+      "spec": {
+        "allowCustomValue": true,
+        "current": {
+          "text": "00000590",
+          "value": "00000590"
+        },
+        "definition": "SELECT individual_registration_number FROM std.std_employees LIMIT 50",
+        "hide": "dontHide",
+        "includeAll": false,
+        "multi": false,
+        "name": "matricule",
+        "options": [],
+        "query": {
+          "datasource": {
+            "name": "${datasource_picker}"
+          },
+          "group": "grafana-postgresql-datasource",
+          "kind": "DataQuery",
+          "spec": {
+            "__legacyStringValue": "SELECT individual_registration_number FROM std.std_employees LIMIT 50"
+          },
+          "version": "v0"
+        },
+        "refresh": "onDashboardLoad",
+        "regex": "",
+        "regexApplyTo": "value",
+        "skipUrlSync": false,
+        "sort": "disabled"
+      }
+    }
+  ]
+}

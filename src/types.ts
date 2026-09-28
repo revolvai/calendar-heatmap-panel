@@ -31,6 +31,8 @@ export interface CalendarHeatmapOptions {
 
   // Data
   aggregation: 'sum' | 'count' | 'avg' | 'max' | 'min' | 'last' | 'first';
+  labelField: string;
+  categoryField: string;
 
   // Interaction
   showTooltip: boolean;
@@ -40,4 +42,6 @@ export interface HeatmapValue {
   date: string;
   originalDate: string;
   count: number;
+  label?: string;
+  category?: string;
 }
